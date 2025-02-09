@@ -1,4 +1,4 @@
-rom google.cloud import pubsub_v1
+from google.cloud import pubsub_v1
 import time
 
 # Config project and topic
