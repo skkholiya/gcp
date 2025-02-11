@@ -1,11 +1,4 @@
-import argparse
-import apache_beam as beam
-import logging #log service
-import random
-from datetime import datetime
-from apache_beam import ParDo,DoFn,GroupByKey, io,\
-    Pipeline,PTransform,WindowInto,WithKeys
-#Pipeline: object manage the DAG of PValue(node,edges) and PTransform(computing)
+ne: object manage the DAG of PValue(node,edges) and PTransform(computing)
 #ParDo(Parallel Processing Transform): applies a used-denfined function(DoFn) to distribute element-wise processing across workers
 #DoFn: Process logic and produce one or more transformed objects.
 from apache_beam.options.pipeline_options import PipelineOptions
