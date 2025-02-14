@@ -40,7 +40,6 @@ class BatchPipelineOptions(PipelineOptions):
         parser.add_argument("--region",  help="Region to create a dataflow job")
         parser.add_argument("--input_path", required=True, help="GCS input path")
         parser.add_argument("--output_path", required=True, help="GCS input path")
-        parser.add_argument("--output", required=True, help="GCS output path")
         parser.add_argument("--temp_location", required=True, help="GCS temp location path")
         parser.add_argument("--job_name", default="argparse-pipeline-job", help="Name for the Dataflow job")
      
@@ -74,12 +73,14 @@ def format_joined_data(element):
     except ValueError:
         join_date = None  # Handle invalid date format
         logger.warning(f"Invalid date format: {first_employee.get('join_date')}")
-
+    #While loading data to gcs other wise use join_date
+    join_date_string = join_date.isoformat() if join_date else None # Convert datetime to string or None
     return {
         "depart": department,
         "emp_count_depart": count,
         "emp_id": first_employee.get('emp_id', ''),
-        "join_date": join_date  # Store datetime or None
+        "join_date": join_date_string  # Store datetime or None
+
     }
 #Find the first employee to join in each department and count the number of employees in each department.
 def run():
@@ -91,7 +92,7 @@ def run():
             pipeline
             | "Read CSV" >> beam.io.ReadFromText(known_args.input_path, skip_header_lines=1)
             | "Convert to JSON" >> beam.ParDo(CSVToJson(), headers=csv_headers)
-            | "Key by Department" >> beam.Map(lambda x: (x['depart'], x))  # Correct keying
+            | "Key by Department" >> beam.Map(lambda x: (x['depart'], x))  
         )
 
         department_count = (
@@ -116,16 +117,18 @@ def run():
             | "Format Data" >> beam.Map(format_joined_data)
         )
 
-        final_data | "Write to BigQuery" >> beam.io.WriteToBigQuery(
-            table=f"{known_args.project}:dataflow_batch_jobs.emp_depart_count",
-            schema="depart:STRING,emp_count_depart:INTEGER,emp_id:STRING,join_date:TIMESTAMP",  # Correct schema
-            create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
-            write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
-            custom_gcs_temp_location=known_args.temp_location
-        )
+        # final_data | "Write to BigQuery" >> beam.io.WriteToBigQuery(
+        #     table=f"{known_args.project}:dataflow_batch_jobs.emp_depart_count",
+        #     schema="depart:STRING,emp_count_depart:INTEGER,emp_id:STRING,join_date:TIMESTAMP", 
+        #     create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
+        #     write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
+        #     custom_gcs_temp_location=known_args.temp_location
+        # )
 
         #write to gcs
-        #final_data | "write to gcs" >> beam.io.WriteToText(known_args.output_path, file_name_suffix=".json")  # Or .csv, .json, etc.
-
+        final_data | "write to gcs" >> beam.Map(json.dumps) | beam.io.WriteToText(
+            known_args.output_path, 
+            file_name_suffix=".json"
+        )
 if __name__ == "__main__":
     run()
