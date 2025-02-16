@@ -1,0 +1,9 @@
+gcloud dataflow sql query
+ --job-name=sql-beam
+ --region=asia-south2
+ --bigquery-table=dataflow_batch_jobs
+ --bigquery-dataset=sql_dump
+ --bigquery-project=chrome-horizon-448017-g5
+ 'SELECT depart, MAX(emp_count_depart) AS emp_count 
+ FROM `chrome-horizon-448017-g5.dataflow_batch_jobs.emp_depart_count`
+ GROUP BY 1'
