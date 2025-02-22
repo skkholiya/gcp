@@ -60,6 +60,11 @@ df = df.withColumn("online",when(col("paymentmode")=="ONLINE",col("amount")).oth
 .withColumn("cash",when(col("paymentmode")=="CASH",col("amount")).otherwise(0))\
 .groupBy("merchant").agg(sum("online").alias("online_amount"),sum("cash").alias("cash_amount"))
 
+'''
+take(n), rdd.map(lambda row:row[0]), collect(): method can be used for extract one or more rows values from a dataframe
+'''
+df.take(1).show()
 df.show()
+
 
 
