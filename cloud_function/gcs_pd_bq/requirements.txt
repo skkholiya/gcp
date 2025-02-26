@@ -1,2 +1,5 @@
-functions-framework==3.*
-google-cloud-dataproc==3.0.0
+functions-framework
+google-cloud-storage
+google-cloud-bigquery
+pandas
+pyarrow
